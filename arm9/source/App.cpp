@@ -264,6 +264,11 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideGameInfoTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowCheats:
+        {
+            HandleShowCheatsTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::ShowDisplaySettings:
         {
             HandleShowDisplaySettingsTrigger();
@@ -294,10 +299,18 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
 
 void App::HandleShowGameInfoTrigger()
 {
-    // auto gameInfoDialog = std::make_unique<NdsGameDetailsBottomSheetView>(
-    //     &_romBrowserController, &_theme->GetMaterialColorScheme(), _theme->GetFontRepository());
-    // gameInfoDialog->SetGraphics(_chipViewVram);
-    // _dialogPresenter.ShowDialog(std::move(gameInfoDialog));
+    auto gameDetailsViewModel = SharedPtr<NdsGameDetailsViewModel>::MakeShared(
+        _romBrowserController.GetTriggerFileInfo(), &_romBrowserController);
+    auto gameDetailsDialog = NdsGameDetailsBottomSheetView::CreateShared(
+        std::move(gameDetailsViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository());
+    gameDetailsDialog->SetGraphics(_chipViewVram);
+    _dialogPresenter.ShowDialog(std::move(gameDetailsDialog));
+}
+
+void App::HandleShowCheatsTrigger()
+{
+    // We close this intermediate dialog so the cheats one can be presented
+    _dialogPresenter.CloseDialog();
 
     auto cheatsViewModel = SharedPtr<CheatsViewModel>::MakeShared(_romBrowserController.GetTriggerFileInfo(), &_romBrowserController);
     auto cheatsDialog = CheatsBottomSheetView::CreateShared(

@@ -11,6 +11,7 @@ class ICoverRepository;
 class IIconRepository;
 class IBannerRepository;
 class ICheatRepository;
+class SaveSlotRepository;
 
 class IRomBrowserController
 {
@@ -22,6 +23,7 @@ public:
     virtual void LaunchFile(const FileInfo& fileInfo) = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;
     virtual void HideGameInfo() = 0;
+    virtual void ShowCheats() = 0;
     virtual void ShowDisplaySettings() = 0;
     virtual void HideDisplaySettings() = 0;
     virtual void GotoSettingsScreen() = 0;
@@ -40,6 +42,10 @@ public:
     virtual const IIconRepository& GetIconRepository() const = 0;
     virtual const IBannerRepository& GetBannerRepository() const = 0;
     virtual const ICheatRepository& GetCheatRepository() const = 0;
+    virtual const SaveSlotRepository& GetSaveSlotRepository() const = 0;
+
+    /// @brief Gets the full path of the given file in the current folder. Call this from the io task queue.
+    virtual void GetFullFilePath(const FileInfo& fileInfo, TCHAR* path, u32 pathLength) const = 0;
 
     virtual const RomBrowserDisplaySettings& GetRomBrowserDisplaySettings() const = 0;
 

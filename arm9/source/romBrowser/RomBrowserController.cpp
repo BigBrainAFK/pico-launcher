@@ -5,6 +5,7 @@
 #include "settings/SettingsProcess.h"
 #include "FileType/ExtensionFileTypeProvider.h"
 #include "FileType/FileType.h"
+#include "FileType/Nds/NdsFileType.h"
 #include "SdFolderFactory.h"
 #include "services/settings/IAppSettingsService.h"
 #include "cheats/UsrCheatRepositoryFactory.h"
@@ -40,6 +41,22 @@ void RomBrowserController::ShowGameInfo(const FileInfo& fileInfo)
 void RomBrowserController::HideGameInfo()
 {
     _stateMachine.Fire(RomBrowserStateTrigger::HideGameInfo);
+}
+
+void RomBrowserController::ShowCheats()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowCheats);
+}
+
+void RomBrowserController::GetFullFilePath(const FileInfo& fileInfo, TCHAR* path, u32 pathLength) const
+{
+    f_getcwd(path, pathLength);
+    int idx = strlcat(path, "/", pathLength);
+    if (path[idx - 2] == '/')
+    {
+        path[idx - 1] = 0;
+    }
+    strlcat(path, fileInfo.GetFileName(), pathLength);
 }
 
 void RomBrowserController::ShowDisplaySettings()
@@ -230,13 +247,7 @@ void RomBrowserController::HandleGotoSettingsScreenTrigger()
 
 void RomBrowserController::UpdateLastUsedFilepath()
 {
-    f_getcwd(_navigatePath, sizeof(_navigatePath) / sizeof(_navigatePath[0]));
-    int idx = strlcat(_navigatePath, "/", sizeof(_navigatePath));
-    if (_navigatePath[idx - 2] == '/')
-    {
-        _navigatePath[idx - 1] = 0;
-    }
-    strlcat(_navigatePath, _triggerFileInfo.GetFileName(), sizeof(_navigatePath));
+    GetFullFilePath(_triggerFileInfo, _navigatePath, sizeof(_navigatePath) / sizeof(_navigatePath[0]));
     _appSettingsService->GetAppSettings().lastUsedFilePath = _navigatePath;
     _appSettingsService->Save();
 }
@@ -249,6 +260,17 @@ void RomBrowserController::SetPicoLoaderParams() const
     loadParams->argumentsLength = 0;
     if (_triggerFileInfo.GetFileType()->TrySetLaunchParameters(loadParams, _navigatePath))
     {
+        if (_triggerFileInfo.GetFileType() == &NdsFileType::sInstance)
+        {
+            // Slot 0 leaves the save path empty so Pico Loader picks the regular .sav file
+            u32 saveSlot = _saveSlotRepository.GetSaveSlot(_navigatePath);
+            if (saveSlot != 0 && !SaveSlotRepository::GetSavePath(
+                loadParams->romPath, saveSlot, loadParams->savePath, sizeof(loadParams->savePath)))
+            {
+                LOG_ERROR("Save path for slot %d is too long, using the default save.\n", saveSlot);
+                loadParams->savePath[0] = 0;
+            }
+        }
         gProcessManager.Goto<PicoLoaderProcess>();
     }
     else

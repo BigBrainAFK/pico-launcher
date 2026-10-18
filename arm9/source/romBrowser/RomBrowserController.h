@@ -12,6 +12,7 @@
 #include "FileType/ExtensionFileTypeProvider.h"
 #include "services/settings/IAppSettingsService.h"
 #include "cheats/ICheatRepository.h"
+#include "saves/SaveSlotRepository.h"
 
 class RomBrowserController : public IRomBrowserController
 {
@@ -28,6 +29,7 @@ public:
     void LaunchFile(const FileInfo& fileInfo) override;
     void ShowGameInfo(const FileInfo& fileInfo) override;
     void HideGameInfo() override;
+    void ShowCheats() override;
     void ShowDisplaySettings() override;
     void HideDisplaySettings() override;
     void GotoSettingsScreen() override;
@@ -46,6 +48,9 @@ public:
     const IIconRepository& GetIconRepository() const override { return *_iconRepository; }
     const IBannerRepository& GetBannerRepository() const override { return *_bannerRepository; }
     const ICheatRepository& GetCheatRepository() const override { return *_cheatRepository; }
+    const SaveSlotRepository& GetSaveSlotRepository() const override { return _saveSlotRepository; }
+
+    void GetFullFilePath(const FileInfo& fileInfo, TCHAR* path, u32 pathLength) const override;
 
     void SetRomBrowserDisplaySettings(const RomBrowserDisplaySettings& romBrowserDisplaySettings) override;
 
@@ -75,6 +80,7 @@ private:
     std::unique_ptr<BannerRepository> _bannerRepository;
     ExtensionFileTypeProvider _fileTypeProvider;
     std::unique_ptr<ICheatRepository> _cheatRepository;
+    SaveSlotRepository _saveSlotRepository { "/_pico/saveslots.txt" };
 
     void HandleTrigger();
     void HandleNavigateTrigger();

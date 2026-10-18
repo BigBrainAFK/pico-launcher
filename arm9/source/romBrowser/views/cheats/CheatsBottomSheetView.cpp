@@ -128,7 +128,10 @@ void CheatsBottomSheetView::Update()
             _cheatListRecycler->InitVram(VramContext(nullptr, _objVramManager, nullptr, nullptr));
             _cheatListRecycler->Focus(*_focusManager);
         }
-        else if (_currentCheatCategory != _viewModel->GetCurrentCheatCategory()
+        // Run only once the list exists
+        // Before InitVram there is no vram manager to build it with
+        // This would happen when the cheats finished loading before this sheet was shown
+        else if (_cheatsAdapter && _currentCheatCategory != _viewModel->GetCurrentCheatCategory()
             && _viewModel->GetCurrentCheatCategory() != nullptr)
         {
             _secondaryLabel->SetText(_viewModel->GetCurrentCheatCategory()->GetName());
