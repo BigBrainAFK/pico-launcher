@@ -41,6 +41,7 @@ private:
     const MaterialColorScheme* _materialColorScheme;
     SharedPtr<Label2DView> _titleLabel;
     SharedPtr<Label2DView> _saveFileLabel;
+    SharedPtr<Label2DView> _saveStatusLabel;
     SharedPtr<Label2DView> _hintLabel;
     SharedPtr<ChipView> _cheatsChip;
     SharedPtr<ChipView> _saveSlotChip;

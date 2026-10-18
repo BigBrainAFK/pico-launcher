@@ -1,5 +1,4 @@
 #include "common.h"
-#include <stdio.h>
 #include "gui/GraphicsContext.h"
 #include "gui/input/InputProvider.h"
 #include "themes/material/MaterialColorScheme.h"
@@ -16,6 +15,9 @@
 #define SAVE_FILE_LABEL_X       20
 #define SAVE_FILE_LABEL_Y       68
 
+#define SAVE_STATUS_LABEL_X     20
+#define SAVE_STATUS_LABEL_Y     84
+
 #define HINT_LABEL_X            16
 #define HINT_LABEL_Y            147
 
@@ -26,6 +28,7 @@ NdsGameDetailsBottomSheetView::NdsGameDetailsBottomSheetView(
     , _materialColorScheme(materialColorScheme)
     , _titleLabel(Label2DView::CreateShared(216, 16, 128, fontRepository->GetFont(FontType::Medium11)))
     , _saveFileLabel(Label2DView::CreateShared(216, 16, 160, fontRepository->GetFont(FontType::Regular10)))
+    , _saveStatusLabel(Label2DView::CreateShared(216, 16, 64, fontRepository->GetFont(FontType::Medium7_5)))
     , _hintLabel(Label2DView::CreateShared(224, 16, 64, fontRepository->GetFont(FontType::Medium7_5)))
     , _cheatsChip(ChipView::CreateShared(md::sys::color::surfaceContainerLow, materialColorScheme, fontRepository))
     , _saveSlotChip(ChipView::CreateShared(md::sys::color::surfaceContainerLow, materialColorScheme, fontRepository))
@@ -37,6 +40,9 @@ NdsGameDetailsBottomSheetView::NdsGameDetailsBottomSheetView(
     _saveFileLabel->SetEllipsisStyle(LabelView::EllipsisStyle::Ellipsis);
     _saveFileLabel->SetText("");
     AddChildTail(_saveFileLabel.GetPointer());
+
+    _saveStatusLabel->SetText("");
+    AddChildTail(_saveStatusLabel.GetPointer());
 
     _hintLabel->SetText(u"L/R: Change save slot");
     AddChildTail(_hintLabel.GetPointer());
@@ -68,6 +74,7 @@ void NdsGameDetailsBottomSheetView::Update()
     _cheatsChip->SetPosition(CHIPS_X, _position.y + CHIPS_Y);
     _saveSlotChip->SetPosition(CHIPS_X + _cheatsChip->GetWidth() + CHIPS_SPACING, _position.y + CHIPS_Y);
     _saveFileLabel->SetPosition(SAVE_FILE_LABEL_X, _position.y + SAVE_FILE_LABEL_Y);
+    _saveStatusLabel->SetPosition(SAVE_STATUS_LABEL_X, _position.y + SAVE_STATUS_LABEL_Y);
     _hintLabel->SetPosition(HINT_LABEL_X, _position.y + HINT_LABEL_Y);
 }
 
@@ -81,6 +88,11 @@ void NdsGameDetailsBottomSheetView::Draw(GraphicsContext& graphicsContext)
         _titleLabel->SetForegroundColor(_materialColorScheme->onSurface);
         _saveFileLabel->SetBackgroundColor(backColor);
         _saveFileLabel->SetForegroundColor(_materialColorScheme->onSurfaceVariant);
+        _saveStatusLabel->SetBackgroundColor(backColor);
+        // Highlight new saves, so it is clear that this slot starts the game fresh
+        _saveStatusLabel->SetForegroundColor(_viewModel->SaveFileExists()
+            ? _materialColorScheme->onSurfaceVariant
+            : _materialColorScheme->primary);
         _hintLabel->SetBackgroundColor(backColor);
         _hintLabel->SetForegroundColor(_materialColorScheme->onSurfaceVariant);
         BottomSheetView::Draw(graphicsContext);
@@ -134,11 +146,12 @@ void NdsGameDetailsBottomSheetView::UpdateSaveSlotText()
     _saveSlotChip->SetText(chipText);
 
     TCHAR saveFileName[256];
-    char labelText[300];
     if (!_viewModel->GetSaveFileName(saveFileName, sizeof(saveFileName) / sizeof(saveFileName[0])))
     {
         saveFileName[0] = 0;
     }
-    snprintf(labelText, sizeof(labelText), _viewModel->SaveFileExists() ? "%s" : "%s (new)", saveFileName);
-    _saveFileLabel->SetText(labelText);
+    _saveFileLabel->SetText(saveFileName);
+    _saveStatusLabel->SetText(_viewModel->SaveFileExists()
+        ? u"Existing save"
+        : u"New save, created on first launch");
 }
